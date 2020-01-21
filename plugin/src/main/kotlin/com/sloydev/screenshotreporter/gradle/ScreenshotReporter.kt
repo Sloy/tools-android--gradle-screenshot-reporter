@@ -7,6 +7,13 @@ class ScreenshotReporter(val appPackage: String, sdkDirectory: File) {
   private val adbPath = sdkDirectory.resolve("platform-tools").resolve("adb")
   val adb = Adb(adbPath)
 
+  val currentDevice: DeviceId by lazy {
+    val devices = adb.devices()
+    check(devices.isNotEmpty()) { "No devices found" }
+    check(devices.size == 1) { "More than one device, not supported for now :(" }
+    devices[0]
+  }
+
   companion object {
     val DEVICE_SCREENSHOT_DIR = "app_spoon-screenshots"
     val MARSHMALLOW_API_LEVEL = 23
@@ -16,8 +23,7 @@ class ScreenshotReporter(val appPackage: String, sdkDirectory: File) {
     outputDir.deleteRecursively()
     outputDir.mkdirs()
 
-    val singleDevice = getRunningDevice()
-    pullExternalDirectory(singleDevice, DEVICE_SCREENSHOT_DIR, outputDir)
+    pullExternalDirectory(currentDevice, DEVICE_SCREENSHOT_DIR, outputDir)
     simplifyDirectoryStructure(outputDir)
 
     println("Wrote screenshots report to file://${outputDir.absolutePath}")
@@ -32,26 +38,17 @@ class ScreenshotReporter(val appPackage: String, sdkDirectory: File) {
   }
 
   fun cleanScreenshotsFromDevice() {
-    val device = getRunningDevice()
-    val screenshotsFolder = adb.getExternalStoragePath(device).resolve(DEVICE_SCREENSHOT_DIR)
-    println("Cleaning existing screenshots on \"${screenshotsFolder.path}\" from device [${device.serialNumber}]...")
-    adb.clearFolder(device, screenshotsFolder)
+    val screenshotsFolder = adb.getExternalStoragePath(currentDevice).resolve(DEVICE_SCREENSHOT_DIR)
+    println("Cleaning existing screenshots on \"${screenshotsFolder.path}\" from device [${currentDevice.serialNumber}]...")
+    adb.clearFolder(currentDevice, screenshotsFolder)
   }
 
   fun grantPermissions() {
-    val device = getRunningDevice()
-    val apiLevel = adb.getApiLevel(device)
+    val apiLevel = adb.getApiLevel(currentDevice)
     if (apiLevel >= MARSHMALLOW_API_LEVEL) {
-      println("Granting read/write storage permission to device [${device.serialNumber}]...")
-      adb.grantExternalStoragePermission(device, appPackage)
+      println("Granting read/write storage permission to device [${currentDevice.serialNumber}]...")
+      adb.grantExternalStoragePermission(currentDevice, appPackage)
     }
-  }
-
-  private fun getRunningDevice(): DeviceId {
-    val devices = adb.devices()
-    check(devices.isNotEmpty()) { "No devices found" }
-    check(devices.size == 1) { "More than one device, not supported for now :(" }
-    return devices[0]
   }
 
   private fun pullExternalDirectory(device: DeviceId, directoryName: String, outputDir: File) {

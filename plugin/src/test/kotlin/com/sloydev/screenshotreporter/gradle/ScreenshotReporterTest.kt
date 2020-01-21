@@ -112,7 +112,7 @@ class ScreenshotReporterTest {
     }
 
     private fun pushFilesToDevice(files: Array<String>) {
-        val device = screenshotReporter.adb.devices().first()
+        val device = screenshotReporter.currentDevice
         files.map {  inputTestFolder.resolve(it) }
             .forEach { localTestFile -> localTestFile.createNewFile() }
         val deviceFile = screenshotReporter.adb.getExternalStoragePath(device)
