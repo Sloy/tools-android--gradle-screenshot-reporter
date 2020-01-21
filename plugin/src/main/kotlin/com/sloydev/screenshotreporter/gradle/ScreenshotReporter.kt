@@ -34,7 +34,7 @@ class ScreenshotReporter(val appPackage: String, sdkDirectory: File) {
   fun cleanScreenshotsFromDevice() {
     val device = getRunningDevice()
     val screenshotsFolder = adb.getExternalStoragePath(device).resolve(DEVICE_SCREENSHOT_DIR)
-    println("Cleaning existing screenshots on \"${screenshotsFolder.escapedPath}\" from device [${device.serialNumber}]...")
+    println("Cleaning existing screenshots on \"${screenshotsFolder.path}\" from device [${device.serialNumber}]...")
     adb.clearFolder(device, screenshotsFolder)
   }
 
@@ -57,7 +57,7 @@ class ScreenshotReporter(val appPackage: String, sdkDirectory: File) {
   private fun pullExternalDirectory(device: DeviceId, directoryName: String, outputDir: File) {
     // Output path on public external storage, for Lollipop and above.
     val externalDir: RemoteFile = adb.getExternalStoragePath(device).resolve(directoryName)
-    println("Pulling files from \"${externalDir.escapedPath}\" on device [${device.serialNumber}]...")
+    println("Pulling files from \"${externalDir.path}\" on device [${device.serialNumber}]...")
     try {
       adb.pullFolder(device, externalDir, outputDir)
     } catch (noDirectoryException: AdbNoSuchFileOrDirectoryException) {
