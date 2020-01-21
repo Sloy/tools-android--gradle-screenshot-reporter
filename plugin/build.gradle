@@ -24,15 +24,8 @@ dependencies {
 
     implementation 'com.android.tools.build:gradle:3.4.2'
 
-    implementation 'com.squareup.okhttp3:okhttp:3.7.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.7.0'
-    implementation 'com.google.code.gson:gson:2.8.0'
-    implementation 'com.android.tools.ddms:ddmlib:25.3.0'
-
     testImplementation 'junit:junit:4.12'
     testImplementation 'com.google.truth:truth:0.30'
-    testImplementation 'commons-io:commons-io:2.5'
-    testImplementation 'com.github.geowarin:docker-junit-rule:1.1.0'
 }
 
 tasks.named('test') {

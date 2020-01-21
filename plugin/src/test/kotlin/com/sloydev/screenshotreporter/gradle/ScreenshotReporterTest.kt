@@ -13,6 +13,7 @@ class ScreenshotReporterTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+//    val permanentFolder = File("test-output")
 
     lateinit var outputFolder: File
     lateinit var inputTestFolder: File
@@ -23,26 +24,20 @@ class ScreenshotReporterTest {
     @Before
     fun setUp() {
         outputFolder = temporaryFolder.newFolder("outputs")
+//        outputFolder = permanentFolder.also { it.mkdirs() }
         inputTestFolder = temporaryFolder.newFolder("inputs")
+//        inputTestFolder = permanentFolder.resolve("inputs").also { it.mkdirs() }
         nonExistentOutputFolder = temporaryFolder.root.resolve("another_output")
-    }
 
-    @Test
-    fun `returns working adb`() {
-        val adb = screenshotReporter.getAdb()
-
-        assertWithMessage("Adb is not connected")
-                .that(adb.isConnected)
-                .isTrue()
+        screenshotReporter.cleanScreenshotsFromDevice()
     }
 
     @Test
     fun `returns devices`() {
-        val adb = screenshotReporter.getAdb()
-        val devices = adb.devices
+        val devices = screenshotReporter.adb.devices()
 
         assertWithMessage("No devices found")
-                .that(devices.asList())
+                .that(devices)
                 .isNotEmpty()
 
         devices.forEach { println(it) }
@@ -117,15 +112,15 @@ class ScreenshotReporterTest {
     }
 
     private fun pushFilesToDevice(files: Array<String>) {
-        with(screenshotReporter.getAdb().devices[0]) {
-            files.map {
-                inputTestFolder.resolve(it)
-                        .apply { createNewFile() }
-            }.forEach {
-                val deviceFile = getExternalStoragePath(this, DEVICE_SCREENSHOT_DIR) + "/" + it.name
-                println("device file: $deviceFile")
-                pushFile(it.absolutePath, deviceFile)
-            }
+        val device = screenshotReporter.adb.devices().first()
+        files.map {  inputTestFolder.resolve(it) }
+            .forEach { file ->
+              file.createNewFile()
+              val deviceFile = screenshotReporter.adb.getExternalStoragePath(device)
+                  .resolve(DEVICE_SCREENSHOT_DIR)
+                  .resolve(file.name)
+              println("device file: ${deviceFile.escapedPath}")
+              screenshotReporter.adb.pushFile(device, file, deviceFile)
         }
     }
 }
